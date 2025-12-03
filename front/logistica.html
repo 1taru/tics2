@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<title>Panel Logística — Tablet</title>
+<title>Panel Logística </title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 
 <!-- CHART.JS -->
@@ -212,7 +212,7 @@ pre{
 <div class="container">
 
 <header>
-  <h1 style="margin:0; font-size:2.2rem;">Panel Logística (Tablet)</h1>
+  <h1 style="margin:0; font-size:2.2rem;">Panel Logística</h1>
   <span id="badge" class="pill">Cargando…</span>
   <button id="btnLogout" style="width:auto;">Salir</button>
 </header>
@@ -300,20 +300,20 @@ pre{
 <!-- 3. TRACKING -->
 <!-- ================================================================= -->
 <div class="accordion">
-  <button class="accordion-btn" onclick="toggleAccordion(this)">
-    Tracking de Pedido
-    <span class="arrow">▶</span>
-  </button>
-
-  <div class="accordion-content">
-    <input id="trackId" type="number" placeholder="ID del pedido">
-    <button onclick="trackOrder()">Consultar</button>
-
-    <div id="trackResult" style="margin-top:22px;">
-      <div class="muted">Ingrese un ID para ver el estado.</div>
+    <button class="accordion-btn" onclick="toggleAccordion(this)">
+      Tracking de Pedido
+      <span class="arrow">▶</span>
+    </button>
+  
+    <div class="accordion-content">
+      <input id="trackId" type="text" placeholder="Ingrese SKU del pedido">
+      <button onclick="trackOrder()">Consultar</button>
+  
+      <div id="trackResult" style="margin-top:22px;">
+        <div class="muted">Ingrese un SKU para ver el estado.</div>
+      </div>
     </div>
   </div>
-</div>
 
 
 
@@ -473,16 +473,17 @@ function updateCharts(){
 
 /* TRACKING */
 async function trackOrder() {
-  const id = Number($("#trackId").value);
+  const sku = $("#trackId").value.trim();
   const box = $("#trackResult");
 
   box.innerHTML = "";
-  if (!id) {
-    box.innerHTML = "<div class='muted'>Ingrese un ID válido</div>";
+  if (!sku) {
+    box.innerHTML = "<div class='muted'>Ingrese un SKU válido</div>";
     return;
   }
 
-  const r = await fetch(`${API}/orders/${id}/details`, {credentials:"include"});
+  // Realizamos la consulta por SKU
+  const r = await fetch(`${API}/orders/sku/${sku}/details`, {credentials:"include"});
   const d = await r.json();
 
   if (!d.ok) {
@@ -507,9 +508,17 @@ async function trackOrder() {
   });
 
   box.innerHTML += `
-    <pre style="margin-top:10px;">
-${JSON.stringify(d,null,2)}
-    </pre>
+    <div class="track-info">
+      <h4>Detalles del Pedido</h4>
+      <div><strong>Pedido ID:</strong> ${d.order.id}</div>
+      <div><strong>Cliente:</strong> ${d.order.customer}</div>
+      <div><strong>SKU:</strong> ${d.order.sku}</div>
+      <div><strong>Estado:</strong> ${d.order.status}</div>
+      <div><strong>Estación actual:</strong> ${d.order.current_station}</div>
+      <div><strong>Cantidad Total:</strong> ${d.order.qty_total}</div>
+      <div><strong>Detalles:</strong> ${d.order.details || 'Sin detalles adicionales'}</div>
+      <div><strong>Merma total:</strong> ${d.merma_total}</div>
+    </div>
   `;
 }
 

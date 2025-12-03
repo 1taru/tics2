@@ -518,39 +518,38 @@ app.post("/stations/:station/work/:id/advance",
 // ============================================================
 //  DETALLES DE PEDIDO
 // ============================================================
-app.get("/orders/:id/details", verificarToken, async (req,res)=>{
-  const id = req.params.id;
-
-  const order = await pool.query(`
-    SELECT *, NOW()-created_at AS tiempo_total
-    FROM orders WHERE id=$1
-  `,[id]);
-
-  if(!order.rows.length)
-    return res.json({ok:false,message:"No existe"});
-
-  const history = await pool.query(`
-    SELECT station,qty_total,qty_real,merma,
-           created_at,completed_at,
-           completed_at-started_at AS duracion_estacion
-    FROM station_tasks
-    WHERE order_id=$1
-    ORDER BY id ASC
-  `,[id]);
-
-  const merma = await pool.query(`
-    SELECT COALESCE(SUM(merma),0) AS total
-    FROM station_tasks
-    WHERE order_id=$1
-  `,[id]);
-
-  res.json({
-    ok:true,
-    order: order.rows[0],
-    history: history.rows,
-    merma_total: merma.rows[0].total
+app.get("/orders/sku/:sku/details", verificarToken, async (req, res) => {
+    const sku = req.params.sku;
+    const order = await pool.query(`
+      SELECT *, NOW()-created_at AS tiempo_total
+      FROM orders WHERE sku=$1
+    `, [sku]);
+  
+    if (!order.rows.length)
+      return res.json({ ok: false, message: "No existe pedido con ese SKU" });
+  
+    const history = await pool.query(`
+      SELECT station, qty_total, qty_real, merma,
+             created_at, completed_at,
+             completed_at-started_at AS duracion_estacion
+      FROM station_tasks
+      WHERE order_id=$1
+      ORDER BY id ASC
+    `, [order.rows[0].id]);
+  
+    const merma = await pool.query(`
+      SELECT COALESCE(SUM(merma), 0) AS total
+      FROM station_tasks
+      WHERE order_id=$1
+    `, [order.rows[0].id]);
+  
+    res.json({
+      ok: true,
+      order: order.rows[0],
+      history: history.rows,
+      merma_total: merma.rows[0].total
+    });
   });
-});
 
 // ============================================================
 //  INICIAR SERVIDOR

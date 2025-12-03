@@ -1,127 +1,143 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Operador — Estación 5</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8"/>
+  <title>Operador — Estación 5</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-  body{
-    font-family:system-ui,Segoe UI,Roboto,Arial;
-    margin:0;
-    padding:24px;
-    min-height:100vh;
-    background:#0b1020;
-    color:#eaf0ff;
-    display:flex;
-    justify-content:center;
-  }
+  <style>
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      background: #0b1020;
+      color: #eaf0ff;
+      display: flex;
+      justify-content: center;
+    }
 
-  .grid{
-    width:min(1200px,95vw);
-    display:grid;
-    grid-template-columns:1fr;
-    gap:24px;
-  }
-  @media (min-width:900px){
-    .grid{ grid-template-columns:1fr 1fr; }
-  }
+    .grid {
+      width: min(1200px, 95vw);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
 
-  .card{
-    background:#131a2a;
-    padding:22px;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.08);
-  }
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
 
-  header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:16px;
-    flex-wrap:wrap;
-    gap:10px;
-  }
+    .card {
+      background: #131a2a;
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, .08);
+    }
 
-  .pill{
-    padding:6px 12px;
-    border-radius:999px;
-    font-size:.85rem;
-    background:#0f1630;
-    border:1px solid rgba(255,255,255,.1);
-    color:#96a0b5;
-  }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-  h3{margin-top:0}
+    .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: .85rem;
+      background: #0f1630;
+      border: 1px solid rgba(255, 255, 255, .1);
+      color: #96a0b5;
+    }
 
-  .task{
-    background:#0f1630;
-    padding:16px;
-    border-radius:12px;
-    margin-bottom:16px;
-    border:1px solid rgba(255,255,255,.1);
-    transition:.2s;
-  }
+    h3 {
+      margin-top: 0;
+    }
 
-  .task-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:6px;
-  }
+    .task {
+      background: #0f1630;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
 
-  .priority{
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:.75rem;
-    font-weight:600;
-    color:#0b1020;
-  }
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
 
-  .p-alta{background:#ff6b6b;}
-  .p-media{background:#f7e25b;}
-  .p-baja{background:#4cd964;}
+    .priority {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 700;
+      display: inline-block !important;
+      color: #0b1020;
+    }
 
-  .muted{color:#96a0b5;font-size:.85rem}
+    .p-alta {
+      background: #ff6b6b !important;
+    }
 
-  button{
-    padding:10px 14px;
-    border:0;
-    border-radius:10px;
-    background:#6ea8fe;
-    color:#0b1020;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:6px;
-  }
+    .p-media {
+      background: #f7e25b !important;
+    }
 
-  input{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,.12);
-    background:#0f1630;
-    color:#eaf0ff;
-    margin-top:6px;
-  }
+    .p-baja {
+      background: #4cd964 !important;
+    }
 
-  .details{
-    max-height:0;
-    overflow:hidden;
-    opacity:0;
-    transition:all .25s ease;
-    margin-top:10px;
-    background:#0d1323;
-    border-radius:10px;
-    padding:0 12px;
-  }
+    .muted {
+      color: #96a0b5;
+      font-size: .85rem;
+    }
 
-  .details.open{
-    max-height:350px;
-    opacity:1;
-    padding:12px;
-  }
-</style>
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #6ea8fe;
+      color: #0b1020;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: #0d1323;
+      color: #eaf0ff;
+      margin-top: 6px;
+    }
+
+    .details {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height .25s ease, opacity .25s ease, padding .25s ease;
+      background: #0d1323;
+      border-radius: 10px;
+      margin-top: 10px;
+      padding: 0 12px;
+    }
+
+    .details.open {
+      max-height: 400px;
+      opacity: 1;
+      padding: 12px;
+    }
+  </style>
 </head>
 
 <body>
@@ -155,7 +171,7 @@
 
 <script>
 const API = "http://localhost:3000";
-const STATION = "E5";
+const STATION = "E5"; // Cambiado para Estación 5
 const $ = s => document.querySelector(s);
 
 // =====================
@@ -185,47 +201,56 @@ async function loadTasks(){
   (d.active ||[]).forEach(t => activeBox.appendChild(renderTask(t)));
 
   if(!d.pending?.length) pendingBox.innerHTML="<div class='muted'>Sin tareas.</div>";
-  if(!d.active?.length) activeBox.innerHTML ="<div class='muted'>Sin tareas.</div>";
+  if(!d.active?.length)  activeBox.innerHTML ="<div class='muted'>Sin tareas.</div>";
 }
 
 // =====================
-// RENDER COMPLETO
+// RENDER DE TAREA
 // =====================
-function renderTask(t){
+function renderTask(t) {
   const div = document.createElement("div");
   div.className = "task";
 
+  const p = (t.priority || "").toLowerCase();
+
   const priClass =
-    t.priority === "alta" ? "p-alta" :
-    t.priority === "media" ? "p-media" : "p-baja";
+    p === "alto"  ? "p-alta"  :
+    p === "medio" ? "p-media" :
+    p === "bajo"  ? "p-baja"  :
+    "p-baja"; // fallback
 
   let botones = "";
 
   if (t.status === "queued") {
     botones = `<button onclick="startTask(${t.id})">Iniciar</button>`;
-  }
-  else if (t.status === "in_progress") {
+  } else if (t.status === "in_progress") {
     botones = `
-      <input type="number" id="qty_${t.id}" placeholder="Cantidad final" min="1">
-      <button onclick="advance(${t.id})">Finalizar Pedido</button>
+      <input type="number" id="qty_${t.id}" placeholder="Cantidad hecha" min="1">
+      <button onclick="advance(${t.id})">Completar</button>
     `;
   }
 
   div.innerHTML = `
     <div class="task-header">
       <strong>${t.sku || "Sin SKU"}</strong>
-      <span class="priority ${priClass}">${t.priority || "baja"}</span>
+      <span class="priority ${priClass}">${t.priority}</span>
     </div>
 
-    <div class="muted">Pedido #${t.order_id} • Cliente: ${t.customer||"-"}</div>
+    <div class="muted">Pedido #${t.order_id} • Cliente: ${t.customer || "-"}</div>
 
     <div class="muted" style="margin-top:6px;">
-      <strong>Cant. Total:</strong> ${t.qty_total} · 
+      <strong>Cant. Total:</strong> ${t.qty_total}
+      · 
       <strong>Cant. Real:</strong> ${t.qty_real ?? "-"}
+      · 
+      <strong>Merma:</strong> ${t.merma ?? "-"}
     </div>
 
     <div class="muted">
       <strong>Sitio:</strong> ${t.site || "-"}
+    </div>
+    <div class="muted">
+      <strong>Detalle:</strong> ${t.details || "-"}
     </div>
 
     <div style="margin-top:10px;">
@@ -234,25 +259,34 @@ function renderTask(t){
     </div>
 
     <div id="det_${t.id}" class="details">
-      <pre>${JSON.stringify(t,null,2)}</pre>
-    </div>
+  <strong>Detalles del Pedido:</strong><br>
+  <div><strong>ID de Pedido:</strong> ${t.order_id}</div>
+  <div><strong>Cliente:</strong> ${t.customer || "Sin cliente"}</div>
+  <div><strong>Sitio:</strong> ${t.site || "Sin sitio"}</div>
+  <div><strong>SKU:</strong> ${t.sku || "Sin SKU"}</div>
+  <div><strong>Cantidad Total:</strong> ${t.qty_total}</div>
+  <div><strong>Cantidad Real:</strong> ${t.qty_real ?? "Sin cantidad real"}</div>
+  <div><strong>Merma:</strong> ${t.merma ?? "Sin merma"}</div>
+  <div><strong>Prioridad:</strong> ${t.priority}</div>
+  <div><strong>Estado:</strong> ${t.status}</div>
+  <div><strong>Detalle:</strong> ${t.details || "Sin detalle"}</div>
+
+  <br><strong>Notas del Pedido:</strong> ${t.note || "Sin detalle adicional"}
+</div>
   `;
 
   return div;
 }
-
 // =====================
-// DETALLES
+// TOGGLE DETALLES
 // =====================
 function toggleDetails(id){
   const el = document.getElementById(id);
-
   if(el.classList.contains("open")){
     el.classList.remove("open");
     return;
   }
-
-  document.querySelectorAll(".details.open").forEach(x=>x.classList.remove("open"));
+  document.querySelectorAll(".details.open").forEach(d => d.classList.remove("open"));
   el.classList.add("open");
 }
 
@@ -270,7 +304,7 @@ async function startTask(taskId){
 }
 
 // =====================
-// FINALIZAR TAREA EN E5
+// COMPLETAR TAREA
 // =====================
 async function advance(taskId){
   const qty = Number($(`#qty_${taskId}`).value);
@@ -285,7 +319,6 @@ async function advance(taskId){
 
   const d = await r.json();
   if(!d.ok) alert(d.message);
-
   loadTasks();
 }
 

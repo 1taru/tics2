@@ -221,32 +221,38 @@ pre{
 <!-- ================================================================= -->
 <!-- 1. CREAR PEDIDO -->
 <!-- ================================================================= -->
+<!-- ================================================================= -->
+<!-- 1. CREAR PEDIDO -->
+<!-- ================================================================= -->
 <div class="accordion">
-  <button class="accordion-btn" onclick="toggleAccordion(this)">
-    Crear Pedido
-    <span class="arrow">▶</span>
-  </button>
-
-  <div class="accordion-content">
-
-    <input id="customer" placeholder="Cliente">
-    <input id="site" placeholder="Obra / Sitio">
-    <input id="sku" placeholder="SKU">
-    <input id="qty" type="number" placeholder="Cantidad Total">
-
-    <!-- ⭐ NUEVO: PRIORIDAD -->
-    <select id="priority">
-      <option value="bajo" selected>Prioridad: Bajo (default)</option>
-      <option value="medio">Prioridad: Medio</option>
-      <option value="alto">Prioridad: Alto</option>
-    </select>
-
-    <button id="btnCreateOrder">Crear Pedido</button>
-    <div id="msgOrder" class="muted" style="margin-top:6px;"></div>
-    <pre id="outOrder">—</pre>
-
+    <button class="accordion-btn" onclick="toggleAccordion(this)">
+      Crear Pedido
+      <span class="arrow">▶</span>
+    </button>
+  
+    <div class="accordion-content">
+  
+      <input id="customer" placeholder="Cliente">
+      <input id="site" placeholder="Obra / Sitio">
+      <input id="sku" placeholder="SKU">
+      <input id="qty" type="number" placeholder="Cantidad Total">
+  
+      <!-- ⭐ NUEVO: DETALLE -->
+      <input id="details" placeholder="Detalle del pedido (opcional)">
+  
+      <!-- ⭐ PRIORIDAD -->
+      <select id="priority">
+        <option value="bajo" selected>Prioridad: Bajo (default)</option>
+        <option value="medio">Prioridad: Medio</option>
+        <option value="alto">Prioridad: Alto</option>
+      </select>
+  
+      <button id="btnCreateOrder">Crear Pedido</button>
+      <div id="msgOrder" class="muted" style="margin-top:6px;"></div>
+      <pre id="outOrder">—</pre>
+  
+    </div>
   </div>
-</div>
 
 
 
@@ -274,16 +280,21 @@ pre{
     <h3 style="margin-top:26px;">Carga por estación</h3>
     <canvas id="chartStations" height="160"></canvas>
 
-    <h3 style="margin-top:26px;">Historial de carga</h3>
-    <canvas id="chartHistory" height="160"></canvas>
-
-    <button onclick="exportExcel()" style="margin-top:20px;">Exportar Excel</button>
-    <button onclick="exportPDF()" style="margin-top:10px;">Exportar PDF</button>
-
   </div>
 </div>
+<!-- ================================================================= -->
+<!-- 4. DETALLE DE PEDIDOS EN ESTACIÓN 5 -->
+<!-- ================================================================= -->
+<div class="accordion">
+    <button class="accordion-btn" onclick="toggleAccordion(this)">
+      Pedidos completados
+      <span class="arrow">▶</span>
+    </button>
 
-
+    <div class="accordion-content">
+      <div class="row" id="stationsBoxE5"></div>
+    </div>
+  </div>
 
 <!-- ================================================================= -->
 <!-- 3. TRACKING -->
@@ -341,27 +352,29 @@ function toggleAccordion(btn){
 /* ============================================================
    CREAR PEDIDO (CON PRIORIDAD)
 ============================================================ */
-$("#btnCreateOrder").onclick = async ()=>{
+// Frontend (Formulario)
+$("#btnCreateOrder").onclick = async () => {
   const body = {
     customer: $("#customer").value.trim(),
     site: $("#site").value.trim(),
     sku: $("#sku").value.trim(),
     qty_total: Number($("#qty").value),
-    priority: $("#priority").value   // ⭐ ENVIADO AL BACKEND
+    priority: $("#priority").value,   // Prioridad
+    details: $("#details").value.trim() || null   // Detalles
   };
 
-  const r = await fetch(`${API}/orders`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify(body)
+  const r = await fetch(`${API}/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body)
   });
 
   const d = await r.json();
-  if(!d.ok) $("#msgOrder").textContent = "Error: "+d.message;
+  if (!d.ok) $("#msgOrder").textContent = "Error: " + d.message;
   else $("#msgOrder").textContent = "Pedido creado correctamente.";
 
-  $("#outOrder").textContent = JSON.stringify(d,null,2);
+  $("#outOrder").textContent = JSON.stringify(d, null, 2);
 };
 
 
@@ -533,7 +546,41 @@ $("#btnLogout").onclick = async ()=>{
   await fetch(`${API}/logout`,{method:"POST",credentials:"include"});
   location.href="/login";
 };
+// Función para cargar solo las tareas 'done' para la Estación 5
+async function loadStationE5() {
+    const r = await fetch(`${API}/stations/E5/work-queue`, { credentials: "include" });
+    const d = await r.json();
+    const box = $("#stationsBoxE5");
+    box.innerHTML = "";
 
+    if (d.ok) {
+        // Acceder a las tareas completadas (en "done")
+        const doneTasks = d.done || [];
+
+        if (doneTasks.length > 0) {
+            doneTasks.forEach(t => {
+                const div = document.createElement("div");
+                div.className = "item";
+                div.innerHTML = `
+                    <strong>${t.sku}</strong><br/>
+                    <small>Pedido #${t.order_id} • Cantidad: ${t.qty_total} • Prioridad: ${t.priority}</small><br/>
+                    <strong>Detalle:</strong> ${t.note || 'Sin detalle'}
+                `;
+                box.appendChild(div);
+            });
+        } else {
+            box.innerHTML = "<div class='muted'>No hay tareas completadas en Estación 5.</div>";
+        }
+    } else {
+        box.innerHTML = "<div class='muted'>Error al cargar las tareas.</div>";
+    }
+}
+
+
+// Llamar a la función para cargar las tareas de la Estación 5
+
+// Cargar las tareas al inicializar
+loadStationE5();
 refresh();
 </script>
 

@@ -1,128 +1,143 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Operador — Estación 2</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8"/>
+  <title>Operador — Estación 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-  body{
-    font-family:system-ui,Segoe UI,Roboto,Arial;
-    margin:0;
-    padding:24px;
-    min-height:100vh;
-    background:#0b1020;
-    color:#eaf0ff;
-    display:flex;
-    justify-content:center;
-  }
-
-  .grid{
-    width:min(1200px,95vw);
-    display:grid;
-    grid-template-columns:1fr;
-    gap:24px;
-  }
-  @media (min-width:900px){
-    .grid{
-      grid-template-columns:1fr 1fr;
+  <style>
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      background: #0b1020;
+      color: #eaf0ff;
+      display: flex;
+      justify-content: center;
     }
-  }
 
-  .card{
-    background:#131a2a;
-    padding:22px;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.08);
-  }
+    .grid {
+      width: min(1200px, 95vw);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
 
-  header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:16px;
-    flex-wrap:wrap;
-    gap:10px;
-  }
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
 
-  .pill{
-    padding:6px 12px;
-    border-radius:999px;
-    font-size:.85rem;
-    background:#0f1630;
-    border:1px solid rgba(255,255,255,.1);
-    color:#96a0b5;
-  }
+    .card {
+      background: #131a2a;
+      padding: 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, .08);
+    }
 
-  h3{margin-top:0}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-  .task{
-    background:#0f1630;
-    padding:16px;
-    border-radius:12px;
-    margin-bottom:16px;
-    border:1px solid rgba(255,255,255,.1);
-  }
+    .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: .85rem;
+      background: #0f1630;
+      border: 1px solid rgba(255, 255, 255, .1);
+      color: #96a0b5;
+    }
 
-  .task-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:6px;
-  }
+    h3 {
+      margin-top: 0;
+    }
 
-  .priority{
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:.75rem;
-    font-weight:600;
-    color:#0b1020;
-  }
+    .task {
+      background: #0f1630;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
 
-  .p-alta{background:#ff6b6b;}
-  .p-media{background:#f7e25b;}
-  .p-baja{background:#4cd964;}
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
 
-  .muted{color:#96a0b5;font-size:.85rem}
+    .priority {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 700;
+      display: inline-block !important;
+      color: #0b1020;
+    }
 
-  button{
-    padding:10px 14px;
-    border:0;
-    border-radius:10px;
-    background:#6ea8fe;
-    color:#0b1020;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:6px;
-  }
+    .p-alta {
+      background: #ff6b6b !important;
+    }
 
-  input{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,.12);
-    background:#0d1323;
-    color:#eaf0ff;
-    margin-top:6px;
-  }
+    .p-media {
+      background: #f7e25b !important;
+    }
 
-  .details{
-    max-height:0;
-    overflow:hidden;
-    opacity:0;
-    transition:max-height .25s ease, opacity .25s ease, padding .25s ease;
-    background:#0d1323;
-    border-radius:10px;
-    margin-top:10px;
-    padding:0 12px;
-  }
+    .p-baja {
+      background: #4cd964 !important;
+    }
 
-  .details.open{
-    max-height:400px;
-    opacity:1;
-    padding:12px;
-  }
-</style>
+    .muted {
+      color: #96a0b5;
+      font-size: .85rem;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #6ea8fe;
+      color: #0b1020;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: #0d1323;
+      color: #eaf0ff;
+      margin-top: 6px;
+    }
+
+    .details {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height .25s ease, opacity .25s ease, padding .25s ease;
+      background: #0d1323;
+      border-radius: 10px;
+      margin-top: 10px;
+      padding: 0 12px;
+    }
+
+    .details.open {
+      max-height: 400px;
+      opacity: 1;
+      padding: 12px;
+    }
+  </style>
 </head>
 
 <body>
@@ -156,7 +171,7 @@
 
 <script>
 const API = "http://localhost:3000";
-const STATION = "E2";
+const STATION = "E2"; // Cambiado para Estación 2
 const $ = s => document.querySelector(s);
 
 // =====================
@@ -192,20 +207,23 @@ async function loadTasks(){
 // =====================
 // RENDER DE TAREA
 // =====================
-function renderTask(t){
+function renderTask(t) {
   const div = document.createElement("div");
   div.className = "task";
 
+  const p = (t.priority || "").toLowerCase();
+
   const priClass =
-    t.priority === "alta" ? "p-alta" :
-    t.priority === "media" ? "p-media" : "p-baja";
+    p === "alto"  ? "p-alta"  :
+    p === "medio" ? "p-media" :
+    p === "bajo"  ? "p-baja"  :
+    "p-baja"; // fallback
 
   let botones = "";
 
   if (t.status === "queued") {
     botones = `<button onclick="startTask(${t.id})">Iniciar</button>`;
-  }
-  else if (t.status === "in_progress") {
+  } else if (t.status === "in_progress") {
     botones = `
       <input type="number" id="qty_${t.id}" placeholder="Cantidad hecha" min="1">
       <button onclick="advance(${t.id})">Completar</button>
@@ -215,10 +233,10 @@ function renderTask(t){
   div.innerHTML = `
     <div class="task-header">
       <strong>${t.sku || "Sin SKU"}</strong>
-      <span class="priority ${priClass}">${t.priority || "baja"}</span>
+      <span class="priority ${priClass}">${t.priority}</span>
     </div>
 
-    <div class="muted">Pedido #${t.order_id} • Cliente: ${t.customer||"-"}</div>
+    <div class="muted">Pedido #${t.order_id} • Cliente: ${t.customer || "-"}</div>
 
     <div class="muted" style="margin-top:6px;">
       <strong>Cant. Total:</strong> ${t.qty_total}
@@ -231,6 +249,9 @@ function renderTask(t){
     <div class="muted">
       <strong>Sitio:</strong> ${t.site || "-"}
     </div>
+    <div class="muted">
+      <strong>Detalle:</strong> ${t.details || "-"}
+    </div>
 
     <div style="margin-top:10px;">
       ${botones}
@@ -238,15 +259,26 @@ function renderTask(t){
     </div>
 
     <div id="det_${t.id}" class="details">
-      <pre>${JSON.stringify(t,null,2)}</pre>
-    </div>
+  <strong>Detalles del Pedido:</strong><br>
+  <div><strong>ID de Pedido:</strong> ${t.order_id}</div>
+  <div><strong>Cliente:</strong> ${t.customer || "Sin cliente"}</div>
+  <div><strong>Sitio:</strong> ${t.site || "Sin sitio"}</div>
+  <div><strong>SKU:</strong> ${t.sku || "Sin SKU"}</div>
+  <div><strong>Cantidad Total:</strong> ${t.qty_total}</div>
+  <div><strong>Cantidad Real:</strong> ${t.qty_real ?? "Sin cantidad real"}</div>
+  <div><strong>Merma:</strong> ${t.merma ?? "Sin merma"}</div>
+  <div><strong>Prioridad:</strong> ${t.priority}</div>
+  <div><strong>Estado:</strong> ${t.status}</div>
+  <div><strong>Detalle:</strong> ${t.details || "Sin detalle"}</div>
+
+  <br><strong>Notas del Pedido:</strong> ${t.note || "Sin detalle adicional"}
+</div>
   `;
 
   return div;
 }
-
 // =====================
-// ACCORDION
+// TOGGLE DETALLES
 // =====================
 function toggleDetails(id){
   const el = document.getElementById(id);

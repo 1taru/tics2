@@ -253,83 +253,91 @@ function siguiente(s){ return estaciones[estaciones.indexOf(s)+1] || null; }
 // ============================================================
 //  CREAR PEDIDO
 // ============================================================
-app.post("/orders", verificarToken, requireLogistica, async (req,res)=>{
-    const { customer, site, sku, qty_total, priority } = req.body;
+app.post("/orders", verificarToken, requireLogistica, async (req, res) => {
+    const { customer, site, sku, qty_total, note, details, priority } = req.body;
   
     // Si el frontend no envía prioridad, por defecto "baja"
-    const prioridad = (priority || "baja").toLowerCase().trim();  
-    // Crear pedido
-    const insert = await pool.query(`
-      INSERT INTO orders (customer,site,sku,qty_total)
-      VALUES ($1,$2,$3,$4)
-      RETURNING id
-    `,[customer, site, sku, qty_total]);
+    const prioridad = (priority || "baja").toLowerCase().trim();
   
-    const orderId = insert.rows[0].id;
+    try {
+      // Crear pedido en la tabla "orders"
+      const insert = await pool.query(`
+        INSERT INTO orders (customer, site, sku, qty_total, details)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+      `, [customer, site, sku, qty_total, details]);
   
-    // Crear primera tarea en E1 con prioridad correcta
-    await pool.query(`
-      INSERT INTO station_tasks (order_id,station,qty_total,status,priority)
-      VALUES ($1,'E1',$2,'queued',$3)
-    `,[orderId, qty_total, prioridad]);
+      const orderId = insert.rows[0].id;
   
-    res.json({ ok:true, order_id:orderId });
+      // Crear la tarea en la estación E1 con la prioridad correcta
+      await pool.query(`
+        INSERT INTO station_tasks (order_id, station, qty_total, status, priority, note)
+        VALUES ($1, 'E1', $2, 'queued', $3, $4)
+      `, [orderId, qty_total, prioridad, note]);
+  
+      // Respuesta exitosa
+      res.json({ ok: true, order_id: orderId });
+    } catch (error) {
+      console.error("Error al crear el pedido:", error);
+      res.status(500).json({ ok: false, message: "Error al crear el pedido" });
+    }
   });
 
 // ============================================================
 //  WORK QUEUE POR ESTACIÓN
 // ============================================================
-app.get("/stations/:station/work-queue", verificarToken, async (req,res)=>{
+app.get("/stations/:station/work-queue", verificarToken, async (req, res) => {
     const st = req.params.station;
     if (!validarEstacion(st))
-      return res.json({ok:false,message:"Estación inválida"});
+      return res.json({ ok: false, message: "Estación inválida" });
   
     const pending = await pool.query(`
-        SELECT t.*, o.customer, o.sku, o.site
-        FROM station_tasks t
-        JOIN orders o ON o.id = t.order_id
-        WHERE t.station = $1 AND t.status = 'queued'
-        ORDER BY 
-          CASE 
-            WHEN t.priority = 'alto' THEN 1
-            WHEN t.priority = 'medio' THEN 2
-            WHEN t.priority = 'bajo' THEN 3
-            ELSE 4
-          END,
-          t.id ASC
-      `,[st]);
+      SELECT t.*, o.customer, o.sku, o.site, o.details, t.note
+      FROM station_tasks t
+      JOIN orders o ON o.id = t.order_id
+      WHERE t.station = $1 AND t.status = 'queued'
+      ORDER BY 
+        CASE 
+          WHEN t.priority = 'alto' THEN 1
+          WHEN t.priority = 'medio' THEN 2
+          WHEN t.priority = 'bajo' THEN 3
+          ELSE 4
+        END,
+        t.id ASC
+    `, [st]);
   
-      const active = await pool.query(`
-        SELECT t.*, o.customer, o.sku, o.site
-        FROM station_tasks t
-        JOIN orders o ON o.id = t.order_id
-        WHERE t.station = $1 AND t.status = 'in_progress'
-        ORDER BY 
-          CASE 
-            WHEN t.priority = 'alto' THEN 1
-            WHEN t.priority = 'medio' THEN 2
-            WHEN t.priority = 'bajo' THEN 3
-            ELSE 4
-          END,
-          t.id ASC
-      `,[st]);
+    const active = await pool.query(`
+      SELECT t.*, o.customer, o.sku, o.site, o.details, t.note
+      FROM station_tasks t
+      JOIN orders o ON o.id = t.order_id
+      WHERE t.station = $1 AND t.status = 'in_progress'
+      ORDER BY 
+        CASE 
+          WHEN t.priority = 'alto' THEN 1
+          WHEN t.priority = 'medio' THEN 2
+          WHEN t.priority = 'bajo' THEN 3
+          ELSE 4
+        END,
+        t.id ASC
+    `, [st]);
   
-      const done = await pool.query(`
-        SELECT t.*, o.customer, o.sku, o.site
-        FROM station_tasks t
-        JOIN orders o ON o.id = t.order_id
-        WHERE t.station = $1 AND t.status = 'done'
-        ORDER BY 
-          CASE 
-            WHEN t.priority = 'alto' THEN 1
-            WHEN t.priority = 'medio' THEN 2
-            WHEN t.priority = 'bajo' THEN 3
-            ELSE 4
-          END,
-          t.id ASC
-      `,[st]);
+    const done = await pool.query(`
+      SELECT t.*, o.customer, o.sku, o.site, o.details, t.note
+      FROM station_tasks t
+      JOIN orders o ON o.id = t.order_id
+      WHERE t.station = $1 AND t.status = 'done'
+      ORDER BY 
+        CASE 
+          WHEN t.priority = 'alto' THEN 1
+          WHEN t.priority = 'medio' THEN 2
+          WHEN t.priority = 'bajo' THEN 3
+          ELSE 4
+        END,
+        t.id ASC
+    `, [st]);
+  
     res.json({
-      ok:true,
+      ok: true,
       pending: pending.rows,
       active: active.rows,
       done: done.rows

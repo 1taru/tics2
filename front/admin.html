@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel Administrador</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0;min-height:100vh;background:#0b1020;color:#eaf0ff;display:flex;justify-content:center;align-items:flex-start;padding:24px}
+    .container{width:min(700px,95vw)}
+    .card{background:#131a2a;border-radius:16px;padding:22px;border:1px solid rgba(255,255,255,.08);margin-bottom:16px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .pill{padding:6px 10px;border-radius:999px;background:#0f1630;border:1px solid rgba(255,255,255,.12);font-size:.85rem;color:#96a0b5}
+    .row{display:flex;gap:12px;margin:8px 0;flex-wrap:wrap}
+    input,select{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f1630;color:#eaf0ff;width:100%}
+    button{padding:12px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:600;background:#6ea8fe;color:#0b1020}
+    pre{white-space:pre-wrap;background:#0f1733;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);min-height:50px}
+    .muted{color:#96a0b5}
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h2 style="margin:0">Panel Administrador</h2>
+    <div class="row">
+      <span id="badge" class="pill">Cargando...</span>
+      <button id="btnLogout">Salir</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <h3>Crear usuario</h3>
+    <div class="muted">El administrador NO puede crear otros administradores.</div>
+
+    <div class="row">
+      <input id="name" placeholder="Nombre">
+      <input id="rut" placeholder="RUT">
+    </div>
+
+    <div class="row">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+
+      <!-- SELECT ACTUALIZADO -->
+      <select id="role">
+        <option value="logistica">Logística</option>
+        <option value="operador_E1">Operador Estación 1</option>
+        <option value="operador_E2">Operador Estación 2</option>
+        <option value="operador_E3">Operador Estación 3</option>
+        <option value="operador_E4">Operador Estación 4</option>
+        <option value="operador_E5">Operador Estación 5</option>
+      </select>
+    </div>
+
+    <button id="btnCreate">Crear usuario</button>
+    <div id="msg" class="muted" style="margin-top:8px"></div>
+    <pre id="box">—</pre>
+  </section>
+
+</div>
+
+<script>
+const API = "http://localhost:3000";
+const $ = s => document.querySelector(s);
+
+const badge   = $("#badge");
+const msg     = $("#msg");
+const box     = $("#box");
+
+(async ()=>{
+  const r = await fetch(`${API}/me`, {credentials:'include'});
+  const d = await r.json();
+  if(!d.ok || d.user.role !== "admin"){
+    location.href="/login";
+  }
+  badge.textContent = `${d.user.name} • ${d.user.role}`;
+})();
+
+$("#btnLogout").onclick = async ()=>{
+  await fetch(`${API}/logout`, {method:"POST",credentials:"include"});
+  location.href="/login";
+};
+
+$("#btnCreate").onclick = async ()=>{
+  msg.textContent = "Enviando...";
+
+  const body = {
+    name: $("#name").value.trim(),
+    rut: $("#rut").value.trim(),
+    email: $("#email").value.trim(),
+    password: $("#password").value,
+    role: $("#role").value  // <- YA ENVÍA oper_E1, oper_E2, etc.
+  };
+
+  try{
+    const r = await fetch(`${API}/register`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"include",
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.message);
+    msg.textContent = "Usuario creado.";
+    box.textContent = JSON.stringify(d.user, null, 2);
+  }
+  catch(e){
+    msg.textContent = "Error: " + e.message;
+  }
+};
+</script>
+
+</body>
+</html>

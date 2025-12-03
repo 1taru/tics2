@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Panel Logística — Tablet</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+
+<!-- CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- XLSX -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ======================================================
+   ESTILOS
+====================================================== */
+
+body{
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  margin:0;
+  height:100%;
+  background:#0b1020;
+  color:#eaf0ff;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:24px;
+}
+
+.container{
+  width:min(1400px, 97vw);
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:26px;
+}
+
+.pill{
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:1rem;
+  background:#0f1630;
+  border:1px solid rgba(255,255,255,.15);
+  color:#96a0b5;
+}
+
+button{
+  padding:16px 22px;
+  border-radius:14px;
+  border:0;
+  cursor:pointer;
+  font-weight:700;
+  font-size:1.1rem;
+  background:#6ea8fe;
+  color:#0b1020;
+  width:100%;
+}
+
+.accordion{
+  margin-bottom:22px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  background:#131a2a;
+}
+
+.accordion-btn{
+  width:100%;
+  background:#1d2436;
+  color:#eaf0ff;
+  text-align:left;
+  padding:24px;
+  font-size:1.35rem;
+  font-weight:600;
+  border:0;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.accordion-btn:hover{
+  background:#252d44;
+}
+
+.arrow{
+  transition:.35s;
+}
+.open .arrow{
+  transform:rotate(90deg);
+}
+
+.accordion-content{
+  max-height:0;
+  overflow:hidden;
+  background:#131a2a;
+  transition:max-height .35s ease, padding .35s ease;
+  padding:0 24px;
+}
+
+.accordion-content.open{
+  padding:24px;
+}
+
+input, select{
+  width:100%;
+  padding:18px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  background:#0f1630 !important;
+  color:#eaf0ff;
+  font-size:1.15rem;
+  margin-bottom:16px;
+}
+
+input::placeholder{
+  color:#7f8aa4;
+}
+
+.kpi-box{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+}
+
+.kpi{
+  flex:1;
+  min-width:200px;
+  background:#0f1630;
+  padding:22px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.kpi h4{
+  margin:0;
+  font-size:1.1rem;
+  color:#96a0b5;
+}
+
+.kpi .num{
+  font-size:2.4rem;
+  margin-top:6px;
+  font-weight:700;
+  color:#6ea8fe;
+}
+
+.station-card{
+  background:#0f1733;
+  padding:18px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  min-width:260px;
+  flex:1;
+  font-size:1.1rem;
+}
+
+.item{
+  background:#131b38;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  margin-bottom:12px;
+  font-size:1.05rem;
+}
+
+pre{
+  white-space:pre-wrap;
+  background:#10162b;
+  padding:18px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+/* Tracking */
+.track-step{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+  font-size:1.2rem;
+}
+
+.track-dot{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#555;
+  margin-right:14px;
+}
+
+.track-dot.active{
+  background:#6ea8fe;
+  box-shadow:0 0 10px #6ea8fe;
+}
+
+.track-dot.done{
+  background:#4cd964;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <h1 style="margin:0; font-size:2.2rem;">Panel Logística (Tablet)</h1>
+  <span id="badge" class="pill">Cargando…</span>
+  <button id="btnLogout" style="width:auto;">Salir</button>
+</header>
+
+
+<!-- ================================================================= -->
+<!-- 1. CREAR PEDIDO -->
+<!-- ================================================================= -->
+<div class="accordion">
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Crear Pedido
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="accordion-content">
+
+    <input id="customer" placeholder="Cliente">
+    <input id="site" placeholder="Obra / Sitio">
+    <input id="sku" placeholder="SKU">
+    <input id="qty" type="number" placeholder="Cantidad Total">
+
+    <!-- ⭐ NUEVO: PRIORIDAD -->
+    <select id="priority">
+      <option value="bajo" selected>Prioridad: Bajo (default)</option>
+      <option value="medio">Prioridad: Medio</option>
+      <option value="alto">Prioridad: Alto</option>
+    </select>
+
+    <button id="btnCreateOrder">Crear Pedido</button>
+    <div id="msgOrder" class="muted" style="margin-top:6px;"></div>
+    <pre id="outOrder">—</pre>
+
+  </div>
+</div>
+
+
+
+<!-- ================================================================= -->
+<!-- 2. KPIs + GRÁFICOS -->
+<!-- ================================================================= -->
+<div class="accordion">
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    KPIs y Gráficos
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="accordion-content">
+
+    <button id="btnRefresh">Actualizar</button>
+
+    <div class="kpi-box" style="margin-top:20px;">
+      <div class="kpi"><h4>E1</h4><div class="num" id="kE1">0</div></div>
+      <div class="kpi"><h4>E2</h4><div class="num" id="kE2">0</div></div>
+      <div class="kpi"><h4>E3</h4><div class="num" id="kE3">0</div></div>
+      <div class="kpi"><h4>E4</h4><div class="num" id="kE4">0</div></div>
+      <div class="kpi"><h4>E5</h4><div class="num" id="kE5">0</div></div>
+    </div>
+
+    <h3 style="margin-top:26px;">Carga por estación</h3>
+    <canvas id="chartStations" height="160"></canvas>
+
+    <h3 style="margin-top:26px;">Historial de carga</h3>
+    <canvas id="chartHistory" height="160"></canvas>
+
+    <button onclick="exportExcel()" style="margin-top:20px;">Exportar Excel</button>
+    <button onclick="exportPDF()" style="margin-top:10px;">Exportar PDF</button>
+
+  </div>
+</div>
+
+
+
+<!-- ================================================================= -->
+<!-- 3. TRACKING -->
+<!-- ================================================================= -->
+<div class="accordion">
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Tracking de Pedido
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="accordion-content">
+    <input id="trackId" type="number" placeholder="ID del pedido">
+    <button onclick="trackOrder()">Consultar</button>
+
+    <div id="trackResult" style="margin-top:22px;">
+      <div class="muted">Ingrese un ID para ver el estado.</div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ================================================================= -->
+<!-- 4. DETALLE POR ESTACIÓN -->
+<!-- ================================================================= -->
+<div class="accordion">
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Detalle completo por estación
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="accordion-content">
+    <div class="row" id="stationsBox"></div>
+  </div>
+</div>
+
+
+
+</div> <!-- END CONTAINER -->
+
+<script>
+const API = "http://localhost:3000";
+const $ = s => document.querySelector(s);
+
+function toggleAccordion(btn){
+  const content = btn.nextElementSibling;
+  const wrapper = btn.parentElement;
+  wrapper.classList.toggle("open");
+  content.classList.toggle("open");
+  content.style.maxHeight = content.classList.contains("open")
+    ? content.scrollHeight + "px"
+    : "0px";
+}
+
+/* ============================================================
+   CREAR PEDIDO (CON PRIORIDAD)
+============================================================ */
+$("#btnCreateOrder").onclick = async ()=>{
+  const body = {
+    customer: $("#customer").value.trim(),
+    site: $("#site").value.trim(),
+    sku: $("#sku").value.trim(),
+    qty_total: Number($("#qty").value),
+    priority: $("#priority").value   // ⭐ ENVIADO AL BACKEND
+  };
+
+  const r = await fetch(`${API}/orders`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify(body)
+  });
+
+  const d = await r.json();
+  if(!d.ok) $("#msgOrder").textContent = "Error: "+d.message;
+  else $("#msgOrder").textContent = "Pedido creado correctamente.";
+
+  $("#outOrder").textContent = JSON.stringify(d,null,2);
+};
+
+
+/* ============================================================
+   RESTO DEL JS (igual que antes)
+============================================================ */
+
+/* AUTH */
+(async ()=>{
+  const r = await fetch("http://localhost:3000/me", {credentials:"include"});
+  const d = await r.json();
+  if(!d.ok || d.user.role !== "logistica") location.href="/login";
+  $("#badge").textContent = d.user.name+" • "+d.user.role;
+})();
+
+/* DASHBOARD */
+async function loadStation(st){
+  const r = await fetch(`${API}/stations/${st}/work-queue`, {credentials:"include"});
+  const d = await r.json();
+  return d.ok ? [...d.pending, ...d.active] : [];
+}
+
+let history = [];
+
+async function refresh(){
+  const [E1,E2,E3,E4,E5] = await Promise.all([
+    loadStation("E1"), loadStation("E2"), loadStation("E3"), loadStation("E4"), loadStation("E5")
+  ]);
+
+  $("#kE1").textContent = E1.length;
+  $("#kE2").textContent = E2.length;
+  $("#kE3").textContent = E3.length;
+  $("#kE4").textContent = E4.length;
+  $("#kE5").textContent = E5.length;
+
+  history.push([E1.length,E2.length,E3.length,E4.length,E5.length]);
+  updateCharts();
+
+  const box = $("#stationsBox");
+  box.innerHTML = "";
+  const list = {E1,E2,E3,E4,E5};
+
+  for(const st in list){
+    const div = document.createElement("div");
+    div.className = "station-card";
+    div.innerHTML = `<h4>${st}</h4>`;
+    if(list[st].length === 0){
+      div.innerHTML += `<div class="muted">Sin tareas.</div>`;
+    } else {
+      list[st].forEach(t=>{
+        div.innerHTML += `
+          <div class="item">
+            <strong>${t.sku}</strong><br/>
+            <small>Pedido #${t.order_id} • Cant: ${t.qty_total} • Prio: ${t.priority ?? '—'}</small>
+          </div>
+        `;
+      });
+    }
+    box.appendChild(div);
+  }
+}
+
+$("#btnRefresh").onclick = refresh;
+
+
+/* GRÁFICOS */
+let chartStations, chartHistory;
+function updateCharts(){
+  const last = history[history.length-1];
+
+  if(chartStations) chartStations.destroy();
+  chartStations = new Chart($("#chartStations"),{
+    type:"bar",
+    data:{
+      labels:["E1","E2","E3","E4","E5"],
+      datasets:[{label:"Tareas actuales", data:last}]
+    }
+  });
+
+  if(chartHistory) chartHistory.destroy();
+  chartHistory = new Chart($("#chartHistory"),{
+    type:"line",
+    data:{
+      labels: history.map((_,i)=>"T"+i),
+      datasets:[
+        {label:"E1", data:history.map(h=>h[0])},
+        {label:"E2", data:history.map(h=>h[1])},
+        {label:"E3", data:history.map(h=>h[2])},
+        {label:"E4", data:history.map(h=>h[3])},
+        {label:"E5", data:history.map(h=>h[4])},
+      ]
+    }
+  });
+}
+
+
+/* TRACKING */
+async function trackOrder() {
+  const id = Number($("#trackId").value);
+  const box = $("#trackResult");
+
+  box.innerHTML = "";
+  if (!id) {
+    box.innerHTML = "<div class='muted'>Ingrese un ID válido</div>";
+    return;
+  }
+
+  const r = await fetch(`${API}/orders/${id}/details`, {credentials:"include"});
+  const d = await r.json();
+
+  if (!d.ok) {
+    box.innerHTML = `<div class='muted'>${d.message}</div>`;
+    return;
+  }
+
+  const station = d.order.current_station;
+  const steps = ["E1","E2","E3","E4","E5","DONE"];
+
+  box.innerHTML = "<h4>Progreso del pedido</h4>";
+
+  steps.forEach(s=>{
+    const active = s===station;
+    const done = steps.indexOf(s) < steps.indexOf(station);
+    box.innerHTML += `
+      <div class="track-step">
+        <div class="track-dot ${done?'done':active?'active':''}"></div>
+        <span>${s==='DONE'?'Finalizado':s}</span>
+      </div>
+    `;
+  });
+
+  box.innerHTML += `
+    <pre style="margin-top:10px;">
+${JSON.stringify(d,null,2)}
+    </pre>
+  `;
+}
+
+/* EXPORTS */
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["Estación","Cantidad"],
+    ["E1",$("#kE1").textContent],
+    ["E2",$("#kE2").textContent],
+    ["E3",$("#kE3").textContent],
+    ["E4",$("#kE4").textContent],
+    ["E5",$("#kE5").textContent],
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, "Resumen");
+  XLSX.writeFile(wb, "Dashboard_PolinTrack.xlsx");
+}
+
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("Dashboard PolinTrack", 15, 15);
+  doc.text(`E1: ${$("#kE1").textContent}`, 15, 30);
+  doc.text(`E2: ${$("#kE2").textContent}`, 15, 40);
+  doc.text(`E3: ${$("#kE3").textContent}`, 15, 50);
+  doc.text(`E4: ${$("#kE4").textContent}`, 15, 60);
+  doc.text(`E5: ${$("#kE5").textContent}`, 15, 70);
+
+  doc.save("Dashboard_PolinTrack.pdf");
+}
+
+$("#btnLogout").onclick = async ()=>{
+  await fetch(`${API}/logout`,{method:"POST",credentials:"include"});
+  location.href="/login";
+};
+
+refresh();
+</script>
+
+</body>
+</html>

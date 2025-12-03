@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Operador — Estación 4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  body{
+    font-family:system-ui,Segoe UI,Roboto,Arial;
+    margin:0;
+    padding:24px;
+    min-height:100vh;
+    background:#0b1020;
+    color:#eaf0ff;
+    display:flex;
+    justify-content:center;
+  }
+
+  .grid{
+    width:min(1200px,95vw);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+
+  .card{
+    background:#131a2a;
+    padding:22px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+
+  .pill{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:.85rem;
+    background:#0f1630;
+    border:1px solid rgba(255,255,255,.1);
+    color:#96a0b5;
+  }
+
+  h3{margin-top:0}
+
+  .task{
+    background:#0f1630;
+    padding:16px;
+    border-radius:12px;
+    margin-bottom:16px;
+    border:1px solid rgba(255,255,255,.1);
+    transition:.2s;
+  }
+
+  .task-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+  }
+
+  .priority{
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:.75rem;
+    font-weight:600;
+    color:#0b1020;
+  }
+
+  .p-alta{background:#ff6b6b;}
+  .p-media{background:#f7e25b;}
+  .p-baja{background:#4cd964;}
+
+  .muted{color:#96a0b5;font-size:.85rem}
+
+  button{
+    padding:10px 14px;
+    border:0;
+    border-radius:10px;
+    background:#6ea8fe;
+    color:#0b1020;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:6px;
+  }
+
+  input{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.12);
+    background:#0f1630;
+    color:#eaf0ff;
+    margin-top:6px;
+  }
+
+  .details{
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    transition:all .25s ease;
+    margin-top:10px;
+    background:#0d1323;
+    border-radius:10px;
+    padding:0 12px;
+  }
+
+  .details.open{
+    max-height:300px;
+    opacity:1;
+    padding:12px;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="grid">
+
+  <!-- Pendientes -->
+  <div class="card">
+    <header>
+      <div>
+        <h2 style="margin:0">Estación 4</h2>
+        <div class="pill">Código: E4</div>
+      </div>
+      <span id="userBadge" class="pill">Cargando…</span>
+      <button id="btnLogout">Salir</button>
+    </header>
+
+    <h3>Pendientes</h3>
+    <div class="muted">Pedidos aún no iniciados.</div>
+    <div id="pendingBox"></div>
+  </div>
+
+  <!-- En curso -->
+  <div class="card">
+    <h3>En curso</h3>
+    <div class="muted">Pedidos ya iniciados.</div>
+    <div id="activeBox"></div>
+  </div>
+
+</div>
+
+<script>
+const API = "http://localhost:3000";
+const STATION = "E4";  
+const $ = s => document.querySelector(s);
+
+// =====================
+// AUTENTICACIÓN
+// =====================
+(async ()=>{
+  const r = await fetch(`${API}/me`,{credentials:"include"});
+  const d = await r.json();
+  if(!d.ok) location.href="/login";
+  $("#userBadge").textContent = `${d.user.name} • ${d.user.role}`;
+})();
+
+// =====================
+// CARGAR TAREAS
+// =====================
+async function loadTasks(){
+  pendingBox.innerHTML = "<div class='muted'>Cargando…</div>";
+  activeBox.innerHTML  = "<div class='muted'>Cargando…</div>";
+
+  const r = await fetch(`${API}/stations/${STATION}/work-queue`, {credentials:"include"});
+  const d = await r.json();
+
+  pendingBox.innerHTML = "";
+  activeBox.innerHTML  = "";
+
+  (d.pending||[]).forEach(t => pendingBox.appendChild(renderTask(t)));
+  (d.active ||[]).forEach(t => activeBox.appendChild(renderTask(t)));
+
+  if(!d.pending?.length) pendingBox.innerHTML="<div class='muted'>Sin tareas.</div>";
+  if(!d.active ?.length) activeBox.innerHTML ="<div class='muted'>Sin tareas.</div>";
+}
+
+// =====================
+// RENDER COMPLETO
+// =====================
+function renderTask(t){
+  const div = document.createElement("div");
+  div.className = "task";
+
+  const priClass =
+    t.priority === "alta" ? "p-alta" :
+    t.priority === "media" ? "p-media" : "p-baja";
+
+  let botones = "";
+
+  if (t.status === "queued") {
+    botones = `<button onclick="startTask(${t.id})">Iniciar</button>`;
+  }
+  else if (t.status === "in_progress") {
+    botones = `
+      <input type="number" id="qty_${t.id}" placeholder="Cantidad hecha" min="1">
+      <button onclick="advance(${t.id})">Completar</button>
+    `;
+  }
+
+  div.innerHTML = `
+    <div class="task-header">
+      <strong>${t.sku || "Sin SKU"}</strong>
+      <span class="priority ${priClass}">${t.priority || "baja"}</span>
+    </div>
+
+    <div class="muted">Pedido #${t.order_id} • Cliente: ${t.customer||"-"}</div>
+
+    <div class="muted" style="margin-top:6px;">
+      <strong>Cant. Total:</strong> ${t.qty_total}  
+      · 
+      <strong>Cant. Real:</strong> ${t.qty_real ?? "-"}
+    </div>
+
+    <div class="muted">
+      <strong>Sitio:</strong> ${t.site || "-"}
+    </div>
+
+    <div style="margin-top:10px;">
+      ${botones}
+      <button onclick="toggleDetails('det_${t.id}')">Detalles</button>
+    </div>
+
+    <div id="det_${t.id}" class="details">
+      <pre>${JSON.stringify(t,null,2)}</pre>
+    </div>
+  `;
+
+  return div;
+}
+
+// =====================
+// DETALLES
+// =====================
+function toggleDetails(id){
+  document.getElementById(id).classList.toggle("open");
+}
+
+// =====================
+// INICIAR TAREA
+// =====================
+async function startTask(taskId){
+  const r = await fetch(`${API}/stations/${STATION}/work/${taskId}/start`,{
+    method:"POST",
+    credentials:"include"
+  });
+  const d = await r.json();
+  if(!d.ok) alert(d.message);
+  loadTasks();
+}
+
+// =====================
+// COMPLETAR / AVANZAR
+// =====================
+async function advance(taskId){
+  const qty = Number($(`#qty_${taskId}`).value);
+  if(qty < 1) return alert("Cantidad inválida");
+
+  const r = await fetch(`${API}/stations/${STATION}/work/${taskId}/advance`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({ qty_real: qty })
+  });
+
+  const d = await r.json();
+  if(!d.ok) alert(d.message);
+  loadTasks();
+}
+
+// =====================
+// LOGOUT
+// =====================
+btnLogout.onclick = async ()=>{
+  await fetch(`${API}/logout`,{method:"POST",credentials:"include"});
+  location.href="/login";
+};
+
+loadTasks();
+</script>
+
+</body>
+</html>

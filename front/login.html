@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login por RUT</title>
+
+  <style>
+    body{
+      font-family:system-ui,Segoe UI,Roboto,Arial;
+      margin:0;
+      display:grid;
+      place-items:center;
+      min-height:100vh;
+      background:#0b1020;
+      color:#eaf0ff;
+    }
+    .card{
+      background:#131a2a;
+      width:min(420px,92vw);
+      border-radius:16px;
+      padding:22px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .row{ display:flex; flex-direction:column; gap:8px; margin:10px 0 }
+    input{
+      padding:12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0f1630;
+      color:#eaf0ff;
+    }
+    button{
+      padding:12px 16px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      font-weight:600;
+      background:#6ea8fe;
+      color:#0b1020;
+    }
+    .muted{ color:#96a0b5; font-size:.9rem }
+    .error{ color:#ff6b6b; margin-top:6px; display:none }
+    .ok{ color:#7ae582; margin-top:6px; display:none }
+    a{ color:#6ea8fe }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>Acceso</h2>
+    <p class="muted">Ingresa con tu <strong>RUT</strong> (ej: 12345678-9) y contraseña.</p>
+
+    <form id="loginForm">
+      <div class="row">
+        <label for="rut">RUT</label>
+        <input id="rut" type="text" placeholder="12345678-9" required />
+      </div>
+
+      <div class="row">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••" required />
+      </div>
+
+      <button type="submit">Ingresar</button>
+      <div id="error" class="error"></div>
+      <div id="ok" class="ok"></div>
+    </form>
+
+    <p class="muted" style="margin-top:14px;">
+      ¿No tienes cuenta? <a href="/register">Registrarse</a>
+    </p>
+
+    <hr style="margin:18px 0;border-color:rgba(255,255,255,.08)">
+
+    <div class="row">
+      <button id="btnMe" type="button">Ver perfil (/me)</button>
+      <pre id="meBox" style="white-space:pre-wrap;background:#0f1733;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);min-height:60px"></pre>
+    </div>
+
+    <div class="row">
+      <button id="btnLogout" type="button">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:3000";
+    const $ = s => document.querySelector(s);
+
+    const form = $("#loginForm"),
+          rut = $("#rut"),
+          pass = $("#password"),
+          errBox = $("#error"),
+          okBox = $("#ok"),
+          meBox = $("#meBox"),
+          btnMe = $("#btnMe"),
+          btnLogout = $("#btnLogout");
+
+    function setError(msg){
+      errBox.textContent = msg || "";
+      errBox.style.display = msg ? "block" : "none";
+      okBox.style.display = "none";
+    }
+
+    function setOk(msg){
+      okBox.textContent = msg || "";
+      okBox.style.display = msg ? "block" : "none";
+      errBox.style.display = "none";
+    }
+
+    // ==========================
+    // LOGIN + REDIRECCIÓN SEGÚN ROL (YA FIXEADO)
+    // ==========================
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      setError("");
+      setOk("");
+
+      try {
+        const res = await fetch(`${API}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            rut: rut.value.trim(),
+            password: pass.value,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok)
+          throw new Error(data?.message || "Error de autenticación");
+
+        setOk(`Bienvenido, ${data.user.name}`);
+
+        // Mapeo real basado en tu backend
+        const role = data.user.role;
+
+        const redirectMap = {
+          "admin": "/admin",
+          "logistica": "/logistica",
+          "operador_E1": "/op/1",
+          "operador_E2": "/op/2",
+          "operador_E3": "/op/3",
+          "operador_E4": "/op/4",
+          "operador_E5": "/op/5",
+        };
+
+        setTimeout(()=>{
+          if (redirectMap[role]) {
+            location.href = redirectMap[role];
+          } else {
+            location.href = "/";
+          }
+        }, 600);
+
+      } catch(err){
+        setError(err.message);
+      }
+    });
+
+    // ==========================
+    // BOTÓN /me
+    // ==========================
+    btnMe.addEventListener("click", async ()=>{
+      meBox.textContent = "Consultando...";
+
+      try{
+        const res = await fetch(`${API}/me`, { credentials: "include" });
+        const data = await res.json();
+
+        if(!res.ok || !data.ok)
+          throw new Error(data?.message || "No autenticado");
+
+        meBox.textContent = JSON.stringify(data.user, null, 2);
+
+      } catch(err){
+        meBox.textContent = `Error: ${err.message}`;
+      }
+    });
+
+    // ==========================
+    // LOGOUT
+    // ==========================
+    btnLogout.addEventListener("click", async ()=>{
+      await fetch(`${API}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      setOk("Sesión cerrada");
+      meBox.textContent = "";
+    });
+  </script>
+</body>
+</html>
